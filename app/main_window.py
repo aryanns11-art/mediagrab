@@ -8,8 +8,9 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QMessageBox
 )
-
+from url_utils import is_valid, detect_platform
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -32,13 +33,35 @@ class MainWindow(QMainWindow):
         subtitle = QLabel("Download media from supported platforms")
 
         self.url_input = QLineEdit()
+        self.url_input.returnPressed.connect(self.analyze_url)
         self.url_input.setPlaceholderText("Paste a video URL here...")
 
         self.analyze_button = QPushButton("Analyze URL")
+
+        self.platform = QLabel('Platform - ')
+
+        self.analyze_button.clicked.connect(self.analyze_url)
 
         layout.addWidget(title)
         layout.addWidget(subtitle)
         layout.addSpacing(20)
         layout.addWidget(self.url_input)
         layout.addWidget(self.analyze_button)
+        layout.addWidget(self.platform)
         layout.addStretch()
+
+    def analyze_url(self):
+        url = self.url_input.text().strip()
+
+        if not is_valid(url):
+
+            QMessageBox.warning(self,'Invalid URL','Please enter valid URL')
+            return
+
+        platform = detect_platform(url)
+
+        if platform == "Unknown":
+            QMessageBox.warning(self,'Unsupported Platform','The provided URL is from an unsupported platform.')
+            return
+        
+        self.platform.setText(f'Platform - {platform}')
