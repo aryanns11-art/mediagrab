@@ -9,8 +9,13 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QPushButton,
     QMessageBox,
-    QComboBox
+    QComboBox,
+    QProgressBar
 )
+
+from PySide6.QtCore import QThread
+
+from download_worker import DownloadWorker
 from url_utils import is_valid, detect_platform
 from youtube_service import get_video_info
 
@@ -49,6 +54,15 @@ class MainWindow(QMainWindow):
         self.quality_combo = QComboBox()
         self.quality_combo.addItem('Best')
 
+        self.download_button = QPushButton('Download...')
+
+        self.download_button.setEnabled(False)
+        self.download_button.clicked.connect(self.start_download)
+
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setValue(0)
+        self.progress_bar.setVisible(False)
+
         self.analyze_button.clicked.connect(self.analyze_url)
 
         layout.addWidget(title)
@@ -69,7 +83,12 @@ class MainWindow(QMainWindow):
 
         layout.addSpacing(10)
         layout.addWidget(self.quality_label)
-        layout.addWidget(self.quality_combo)  
+        layout.addWidget(self.quality_combo)
+
+        layout.addSpacing(20)
+        layout.addWidget(self.download_button)  
+
+        layout.addWidget(self.progress_bar)
 
         layout.addStretch()
 
@@ -112,13 +131,10 @@ class MainWindow(QMainWindow):
             seconds = duration % 60
 
             self.title_label.setText(f"Title: {title}")
-
             self.channel_label.setText(f"Channel: {channel}")
-
             self.duration_label.setText(f"Duration: {minutes}:{seconds:02d}")
 
             self.quality_combo.clear()
-
             self.quality_combo.addItem("Best")
 
             qualities = set()
@@ -132,3 +148,73 @@ class MainWindow(QMainWindow):
 
                 self.quality_combo.addItem(f"{height}p")
 
+            self.download_button.setEnabled(True)
+
+    def start_download(self):
+
+        url = self.url_input.text().strip()
+
+        if not url:
+            return
+
+        self.download_button.setEnabled(False)
+        self.analyze_button.setEnabled(False)
+
+        self.progress_bar.setValue(0)
+        self.progress_bar.setVisible(True)
+
+        self.thread = QThread()
+
+        self.worker = DownloadWorker(url,"downloads")
+
+        self.worker.moveToThread(self.thread)
+
+        self.thread.started.connect(self.worker.download)
+
+        self.worker.progress.connect(self.update_progress)
+
+        self.worker.finished.connect(self.download_finished)
+
+        self.worker.error.connect(self.download_error)
+
+        self.thread.start()
+
+
+    def update_progress(self, percentage):
+        self.progress_bar.setValue(int(percentage))
+
+    def download_finished(self):
+
+        self.progress_bar.setValue(100)
+
+        self.download_button.setEnabled(True)
+        self.analyze_button.setEnabled(True)
+
+        self.statusBar().showMessage("Download completed.")
+
+        self.thread.quit()
+        self.thread.wait()
+
+        QMessageBox.information(
+            self,
+            "Download Complete",
+            "Video downloaded successfully."
+        )
+
+    def download_error(self, message):
+
+        self.download_button.setEnabled(True)
+        self.analyze_button.setEnabled(True)
+
+        self.progress_bar.setVisible(False)
+
+        self.statusBar().showMessage("Download failed.")
+
+        self.thread.quit()
+        self.thread.wait()
+
+        QMessageBox.critical(
+            self,
+            "Download Error",
+            message
+        )
