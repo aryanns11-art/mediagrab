@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QMessageBox
 )
 from url_utils import is_valid, detect_platform
+from youtube_service import get_video_info
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -65,3 +66,25 @@ class MainWindow(QMainWindow):
             return
         
         self.platform.setText(f'Platform - {platform}')
+
+        if platform == "YouTube":
+            try:
+                info=get_video_info(url)
+
+                title = info.get('title','Unknown Title')
+                channel = info.get('channel','Unknown Channel')
+                duration = info.get('duration',0)
+
+                min = duration // 60
+                sec = duration % 60
+
+                QMessageBox.information(self,'Video Info',
+                                        f'Title: {title}\n'
+                                        f'Channel: {channel}\n'
+                                        f'Duration: {min}m {sec}s')
+
+            except Exception as e:
+                QMessageBox.critical(self,'Error',
+                                    'Failed to retrieve video information.'
+                                    f'Error: {e}')  
+
