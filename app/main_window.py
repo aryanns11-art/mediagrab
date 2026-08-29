@@ -29,6 +29,8 @@ class MainWindow(QMainWindow):
         self.video_info = None
         self.setup_ui()
 
+#------------------------------------------------------------------------------------
+
     def setup_ui(self):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -92,6 +94,8 @@ class MainWindow(QMainWindow):
 
         layout.addStretch()
 
+#------------------------------------------------------------------------------------
+
     def analyze_url(self):
         url = self.url_input.text().strip()
 
@@ -119,7 +123,7 @@ class MainWindow(QMainWindow):
                                     'Failed to retrieve video information.'
                                     f'Error: {e}')  
 
-
+#------------------------------------------------------------------------------------
 
     def display_video_info(self):
 
@@ -150,6 +154,8 @@ class MainWindow(QMainWindow):
 
             self.download_button.setEnabled(True)
 
+#------------------------------------------------------------------------------------
+
     def start_download(self):
 
         url = self.url_input.text().strip()
@@ -165,7 +171,9 @@ class MainWindow(QMainWindow):
 
         self.thread = QThread()
 
-        self.worker = DownloadWorker(url,"downloads")
+        quality = self.quality_combo.currentText()
+
+        self.worker = DownloadWorker(url,"downloads",quality)
 
         self.worker.moveToThread(self.thread)
 
@@ -179,9 +187,12 @@ class MainWindow(QMainWindow):
 
         self.thread.start()
 
+#------------------------------------------------------------------------------------
 
     def update_progress(self, percentage):
         self.progress_bar.setValue(int(percentage))
+
+#------------------------------------------------------------------------------------
 
     def download_finished(self):
 
@@ -201,6 +212,8 @@ class MainWindow(QMainWindow):
             "Video downloaded successfully."
         )
 
+#------------------------------------------------------------------------------------
+   
     def download_error(self, message):
 
         self.download_button.setEnabled(True)
@@ -218,3 +231,5 @@ class MainWindow(QMainWindow):
             "Download Error",
             message
         )
+
+#------------------------------------------------------------------------------------
