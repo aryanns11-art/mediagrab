@@ -124,6 +124,9 @@ class MainWindow(QMainWindow):
         self.progress_bar.setVisible(False)
         self.progress_bar.setTextVisible(True)
 
+        self.download_status = QLabel("Ready to download")
+        self.download_status.setObjectName("downloadStatus")
+
         # --------------------------------------------------
         # Main layout
         # --------------------------------------------------
@@ -198,6 +201,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.download_button)
 
         layout.addWidget(self.progress_bar)
+        layout.addWidget(self.download_status)
 
         layout.addStretch()
 
@@ -294,6 +298,11 @@ class MainWindow(QMainWindow):
 
             QLabel#locationValue {
                 color: #dce6f5;
+                font-weight: 600;
+            }
+
+            QLabel#downloadStatus {
+                color: #94a3b8;
                 font-weight: 600;
             }
 
@@ -427,6 +436,7 @@ class MainWindow(QMainWindow):
 
         self.download_button.setEnabled(False)
         self.analyze_button.setEnabled(False)
+        self.download_status.setText("Downloading...")
 
         self.progress_bar.setValue(0)
         self.progress_bar.setVisible(True)
@@ -470,6 +480,7 @@ class MainWindow(QMainWindow):
     def download_finished(self):
 
         self.progress_bar.setValue(100)
+        self.download_status.setText("Download completed")
 
         self.download_button.setEnabled(True)
         self.analyze_button.setEnabled(True)
@@ -484,6 +495,7 @@ class MainWindow(QMainWindow):
 
         self.download_button.setEnabled(True)
         self.analyze_button.setEnabled(True)
+        self.download_status.setText("Download failed")
 
         self.progress_bar.setVisible(False)
 
